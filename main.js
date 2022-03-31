@@ -3,6 +3,7 @@ let loc = "https://raw.githubusercontent.com/cd94/f20dv_lab4/master/data.csv";
 let dataMap = new Map();
 let keyMap = new Map();
 let MajMinMap = new Map();
+let SongMap = new Map();
 
 let acousticness = [];
 let danceability = [];
@@ -12,6 +13,14 @@ let liveness = [];
 let speechiness = [];
 let KeyPie = [];
 let ModePie= [];
+let scatter = [];
+let PopList = [];
+
+let first = {id:"",pop:0};
+let second = {id:"",pop:0};
+let third = {id:"",pop:0};
+let fourth = {id:"",pop:0};
+
 
 let yearList = [];
 
@@ -62,7 +71,16 @@ d3.csv(loc,function(data){
             year = data[i].release_date.split("-")[0];
             yearSongs.push(data[i]);
         }
+        
+        //console.log(data[i].artists.substring(1,data[i].artists.length-1))
+        // let artistString = data[i].artists.substring(1,data[i].artists.length-1);
+        // let artistList = artistString.split(",");
+        // artistList[j].substring(1,artistList[j].length-1)
+        SongMap.set(data[i].id,data[i])
+    
     }
+
+    console.log(SongMap)
 
     dataMap.forEach(function(value,key){
         let date = new Date(`${key}-01-01`)
@@ -78,11 +96,14 @@ d3.csv(loc,function(data){
     console.log("data imported.");
 
     console.log("building datasets...")
-    buildData(yearList,false);
+    buildData(yearList,false,"acousticness");
     console.log("datasets built.")
 });
 
-
+/**
+ * Updates the line chart with the values for the specified field
+ * @param {*} selected category returned from the selection of the dropdown menu
+ */
 function onSelection(selected){
     console.log(selected)
     switch(selected){
@@ -90,40 +111,47 @@ function onSelection(selected){
             currCategory = "Acousticness";
             updateAxes(acousticness, "Acousticness");
             addLine(acousticness);
+            buildData(yearList,"null","acousticness")
             break;
         case "Danceability" :
             currCategory = "Danceability";
             updateAxes(danceability, "Danceability");
             addLine(danceability);
+            buildData(yearList,"null","danceability")
             break;
         case "Energy" :
             currCategory = "Energy";
             updateAxes(energy, "Energy");
             addLine(energy);
+            buildData(yearList,"null","energy")
             break;
         case "Instrumentalness" :
             currCategory = "Instrumentalness";
             updateAxes(instrumentalness, "Instrumentalness");
             addLine(instrumentalness);
+            buildData(yearList,"null","instrumentalness")
             break;
         case "Liveness" :
             currCategory = "Liveness";
             updateAxes(liveness, "Liveness");
             addLine(liveness);
+            buildData(yearList,"null","liveness")
             break;
         case "Speechiness" :
             currCategory = "Speechiness";
             updateAxes(speechiness, "Speechiness");
             addLine(speechiness);
+            buildData(yearList,"null","speechiness")
             break;
     }
 }
 
 /**
- * 
  * Function to populate all of the arrays for ranged data: acousticness, danceability, energy, instrumentalness, liveness and speechiness.
+ * @param {*} years The range of years selected using brushing, default 1921-2020
+ * @param {*} bool boolean value determining if the axes need setup or not 
  */
-function buildData(years,bool){
+function buildData(years,bool,category){
 
     acousticness = [];
     danceability = [];
@@ -135,8 +163,8 @@ function buildData(years,bool){
     MajMinMap.clear();
     KeyPie = [];
     ModePie = [];
-
-    
+    scatter = [];
+    PopList = [];
 
     dataMap.forEach(function(value,key){
         let date = new Date(`${key}-01-01`)
@@ -149,9 +177,26 @@ function buildData(years,bool){
             buildSpeechinessData(value,key);
 
             buildKeyData(value,key);
+
+            buildScatterData(value,category);
         }
     });
-    //console.log(MajMinMap);
+
+    first = {id:"",pop:0};
+    second = {id:"",pop:0};
+    third = {id:"",pop:0};
+    fourth = {id:"",pop:0};
+
+    SongMap.forEach(function(value,key){
+        let date = new Date(`${value.year}-01-01`)
+        if(years.includes(date.getFullYear())){
+            buildPopularityData(value,key)
+        }
+    })
+
+    PopList.push(SongMap.get(first.id),SongMap.get(second.id),SongMap.get(third.id),SongMap.get(fourth.id))
+
+    console.log(PopList);
 
     keyMap.forEach(function(value,key){
         KeyPie.push({x:key,y:value});
@@ -176,11 +221,21 @@ function buildData(years,bool){
 
         setupAxes(acousticness, currCategory);
 
+        setupScatterAxes(scatter);
+        updateScatterChart(scatter, currCategory);
+
         addLine(acousticness);
 
-    } else{
+        updateList(PopList,years);
+
+    } else if(bool == "null"){
+        updateScatterChart(scatter, currCategory);
+    } 
+    else{
+        console.log(ModePie);
         updateKey(KeyPie,years);
         updateMode(ModePie);
+        updateList(PopList,years);
         onSelection(currCategory);
     }
     
@@ -346,4 +401,32 @@ function buildKeyData(data){
             MajMinMap.set(mode, MajMinMap.get(mode)+1);
         }
     }
+}
+
+function buildScatterData(data,field){
+    for(let i=0; i<data.length; i++){
+        if(parseFloat(data[i][field]) > 0.05 && parseFloat(data[i][field]) < 0.95 ){
+            scatter.push({x:parseFloat(data[i][field]),y:parseFloat(data[i].tempo),z:data[i].name});
+        }
+        i = i*2;
+    }
+}
+
+function buildPopularityData(data, id){
+
+    if(data.popularity>first.pop){
+        first.id = id;
+        first.pop = data.popularity; 
+    } else if(data.popularity>second.pop){
+        second.id = id;
+        second.pop = data.popularity; 
+    } else if(data.popularity>third.pop){
+        third.id = id;
+        third.pop = data.popularity; 
+    } else if(data.popularity>fourth.pop){
+        fourth.id = id;
+        fourth.pop = data.popularity; 
+    } 
+
+
 }

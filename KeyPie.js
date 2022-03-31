@@ -26,16 +26,16 @@ const pieSvg = d3.select("body")
     .append("g")
     .attr("transform","translate(" + xSize/2 + "," + radius + ")");
 
+var myColor = d3.scaleLinear().domain([0,11])
+    .range(["#494949","#1db954"]);
+var fontColor = d3.scaleLinear().domain([0,1])
+    .range(["#b3b3b3","#212121"]);
+
 /**
  * Builds the outer pie chart showing the distribution of each individual key signature
  * @param {*} dataset containing number of songs in each key in order, starting with C(0) ending in B(11) [num,num,...,num]
  */
 function drawKey(dataset, yearList){ 
-
-    var myColor = d3.scaleLinear().domain([0,11])
-        .range(["#494949","#1db954"]);
-    var fontColor = d3.scaleLinear().domain([0,1])
-        .range(["#b3b3b3","#212121"]);
 
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
@@ -76,7 +76,7 @@ function drawKey(dataset, yearList){
                     return fontColor(ind)});	
             
             div.html("# of Songs" + "<br/>"  + data.data)	
-                .style("left", event.pageX + "px")		
+                .style("left", (event.pageX + 15) + "px")		
                 .style("top", (event.pageY - 28) + "px");
 
         }) .on("mouseout",function(event,data,index){
@@ -128,11 +128,7 @@ function drawKey(dataset, yearList){
  * @param {*} dataset containing number of songs in a major key and minor key: [major,minor]
  */
 function drawMode(dataset){ 
-
-    var myColor = d3.scaleLinear().domain([1,0])
-        .range(["#494949","#1db954"]);
    
-
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
         .style("opacity", 0)
@@ -143,7 +139,13 @@ function drawMode(dataset){
         .data(pie(dataset))
         .enter().append("path")
         .attr("class","modePath")
-        .attr("fill", function(d,i){return myColor(i)})
+        .attr("fill", function(d,i){
+            if(i == 0){
+                return myColor(11)
+            } else{
+                return myColor(0)
+            }
+            })
         .attr("d", modeArc)
         .attr("stroke","#b3b3b3")
         .attr("stroke-width","1px")
@@ -161,7 +163,12 @@ function drawMode(dataset){
             div.transition()		
                 .duration(200)		
                 .style("opacity", 0.9)
-                .style("background",function(){return myColor(data.index)})
+                .style("background",function(){
+                    if(data.index == 0){
+                    return myColor(11)
+                    } else{
+                        return myColor(0)
+                    }})
                 .style("color",function(){
                     let color; 
                     if(data.index ==1){
@@ -172,7 +179,7 @@ function drawMode(dataset){
                     return color});	
             
             div.html("# of Songs" + "<br/>"  + data.data)	
-                .style("left", event.pageX + "px")		
+                .style("left", (event.pageX + 15) + "px")		
                 .style("top", (event.pageY - 28) + "px");
 
         }) .on("mouseout",function(event,data,index){
@@ -212,6 +219,11 @@ function drawMode(dataset){
     
 }
 
+/**
+ * Transition the current data in the key pie chart to the new data 
+ * @param {*} dataset array containing the count of key signatures [num,num,...,num]
+ * @param {*} yearList list of selected years
+ */
 function updateKey(dataset, yearList){
     let path = pieSvg.selectAll(".keyPath")
         .data(pie(dataset))
@@ -258,7 +270,11 @@ function updateKey(dataset, yearList){
     
 }
 
-
+/**
+ * Transition the current data in the mode pie chart to the new data 
+ * @param {*} dataset array containing the count of modes [num,num]
+ * @param {*} yearList list of selected years
+ */
 function updateMode(dataset){
     let path = pieSvg.selectAll(".modePath")
         .data(pie(dataset))

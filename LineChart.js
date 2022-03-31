@@ -1,9 +1,11 @@
-const xSize = 700; const ySize = 350;
+const xSize = 800; const ySize = 350;
 const margin = 150;
 const xMax = xSize - margin*2;
 const yMax = ySize - margin;
 
 const transitionSpeed = 1000;
+
+let brushing = false;
 
 let xExtent;
 let yExtent;
@@ -25,11 +27,18 @@ const svg = d3.select("body")
     .append("g")
     .attr("transform","translate(" + margin + "," + 75 + ")");
 
+const toggle = d3.select(".dropdown-container")
+    .append("input")
+    .attr("type","button")
+    .attr("class","resetButton")
+    .attr("value","Toggle Brushing")
+    .attr("onclick","toggleBrush()");
 
-function brush(){
-    console.log("Brush")
-}
-// Setup the axes on initialisation
+/**
+ * Setup the axes on initialisation
+ * @param {*} data array of [{x,y}] datapoints for the graph
+ * @param {*} category the field currently being shown on the graph 
+ */
 function setupAxes(data,category){
 
     /* Get the 'limits' of the data - the full extent (mins and max)
@@ -93,6 +102,11 @@ function setupAxes(data,category){
 
 }
 
+/**
+ * Updates the extents to represent the new data and transitions the axes
+ * @param {*} data array of [{x,y}] datapoints for the graph
+ * @param {*} category the field currently being shown on the graph 
+ */
 function updateAxes(data, category){
 
     let tmp = [];
@@ -136,7 +150,10 @@ function updateAxes(data, category){
         .call(d3.axisLeft(y))
 }
 
-
+/**
+ * Function to draw the line onto the graph, either drawing a fresh line or mergine an existing line to a new line
+ * @param {*} data array of [{x,y}] datapoints for the graph
+ */
 function addLine(data){
 
     let tmp = [];
@@ -177,9 +194,14 @@ function addLine(data){
         .attr("class","marker")
         .attr("cx", function (d) { return x(d.x) } )
         .attr("cy", function (d) { return y(d.y) } )
-        .attr("r", 7.5)
+        .attr("r", 5)
+        .attr("stroke","#212121")
         .style("opacity", 0)
         .on("mouseover",function(event,d,i){
+
+            d3.select(this)
+                .style("opacity",0.5)
+                .attr("fill","#494949");
 
             //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
 
@@ -188,35 +210,27 @@ function addLine(data){
                 .style("opacity", 0.7);	
             
             div	.html(d.x.getFullYear() + "<br/>"  + d.y.toFixed(2))	
-                .style("left", event.pageX + "px")		
+                .style("left", (event.pageX + 15) + "px")		
                 .style("top", (event.pageY - 28) + "px");
         })
         .on("mouseout",function(event,d,i){
 
+            d3.select(this)
+                .style("opacity",0);
+
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);
-        });
-
-        var brush = svg
-            .call(d3.brushX()
-            .extent([[0,0],[xMax,yMax]])
-            .on("end",function(event){
-                extent = event.selection;
-                selectedYears = [];
-                if(extent != null){
-                    svg.selectAll(".marker")
-                        .attr("id",function(d){
-                            return isBrushed(extent,x(d.x), d.x)
-                        })
-                        buildData(selectedYears, true);
-                    }
-                }
-            ));
-
-        
+        });        
 }
 
+/**
+ * Function to determine if a point has been selected
+ * @param {*} brushArea the extent of the brush area [xmin,xmax]
+ * @param {*} x the coordinate of the marker
+ * @param {*} date the date associated with this marker
+ * @returns 
+ */
 function isBrushed(brushArea, x, date){
     let x0 = brushArea[0],
         x1 = brushArea[1];
@@ -231,4 +245,30 @@ function isBrushed(brushArea, x, date){
     }
 
     return id;
+}
+
+function toggleBrush(){
+    brushing = !brushing;
+    if(brushing){
+        var brush = svg.append("g")
+        .attr("class","brushG")
+        .call(d3.brushX()
+        .extent([[0,0],[xMax,yMax]])
+        .on("end",function(event){
+            extent = event.selection;
+            selectedYears = [];
+            if(extent != null){
+                svg.selectAll(".marker")
+                    .attr("id",function(d){
+                        return isBrushed(extent,x(d.x), d.x)
+                    })
+                    buildData(selectedYears, true);
+                }
+                d3.select(".brushG").call(d3.brush().clear)
+            }
+        ));
+
+    } else{
+        d3.select(".brushG").remove()
+    }
 }

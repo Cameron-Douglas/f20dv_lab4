@@ -26,6 +26,7 @@ h1{
     border-radius: 4px;
     width: 49%;
     float: left;
+    box-shadow: 2px 2px;
 }
 
 .pie-container{
@@ -33,6 +34,25 @@ h1{
     border-radius: 4px;
     width: 49%;
     float: right;
+    box-shadow: 2px 2px;
+}
+
+.scatter-container{
+    background-color: #b3b3b3;
+    border-radius: 4px;
+    width: 49%;
+    float: left;
+    box-shadow: 2px 2px;
+    margin-top: 10px;
+}
+
+.list-container{
+    background-color: #b3b3b3;
+    border-radius: 4px;
+    width: 49%;
+    float: right;
+    box-shadow: 2px 2px;
+    margin-top: 10px;
 }
 
 .dropdown-container{
@@ -64,6 +84,12 @@ h1{
     cursor:pointer;
 }
 
+.resetButton:active {
+    background-color: #494949;
+    box-shadow: 2px 2px black;
+    transform: translateY(1px);
+  }
+
 /* https://bl.ocks.org/d3noob/a22c42db65eb00d4e369 */
 .tooltip {	
     position: absolute;			
@@ -75,4 +101,14 @@ h1{
     border: solid #212121 2px;		
     border-radius: 8px;			
     pointer-events: none;			
+}
+
+.previewText{
+    font-size:12px;
+}
+
+.listDiv{
+    height:fit-content;
+    width: fit-content;
+    border-radius: 4px;
 }
