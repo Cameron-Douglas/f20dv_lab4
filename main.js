@@ -45,13 +45,13 @@ const button = d3.select(".dropdown-container")
         .attr("type","button")
         .attr("class","resetButton")
         .attr("value","Reset Zoom")
-        .attr("onclick","buildData(yearList,true)");
+        .attr("onclick","buildData(yearList,\"update\")");
 
 options.text(data=>data)
     .attr("value", data=>data)
 
 d3.select("select")
-    .on("change",d=>{ var selected = d3.select("select").node().value; onSelection(selected);})
+    .on("change",()=>{ var selected = d3.select("select").node().value; onSelection(selected);})
 
 d3.csv(loc,function(data){
     return data;
@@ -72,32 +72,28 @@ d3.csv(loc,function(data){
             yearSongs.push(data[i]);
         }
         
-        //console.log(data[i].artists.substring(1,data[i].artists.length-1))
-        // let artistString = data[i].artists.substring(1,data[i].artists.length-1);
-        // let artistList = artistString.split(",");
-        // artistList[j].substring(1,artistList[j].length-1)
-        SongMap.set(data[i].id,data[i])
+        
+        SongMap.set(data[i].id,data[i]);
     
     }
-
-    console.log(SongMap)
-
+    // Value is unused but must remain as the first variable of a function in a for each is always the value
     dataMap.forEach(function(value,key){
         let date = new Date(`${key}-01-01`)
         yearList.push(date.getFullYear())
-    })
+    });
 
-    yearList.sort(function(a,b){
-        return a.x - b.x;
-    })
+    yearList.sort(function(firstItem,secondItem){
+        return firstItem.x - secondItem.x;
+    });
 
-    console.log(yearList)
 
     console.log("data imported.");
 
-    console.log("building datasets...")
-    buildData(yearList,false,"acousticness");
-    console.log("datasets built.")
+    console.log("building datasets...");
+    
+    buildData(yearList,"init","acousticness");
+
+    console.log("datasets built.");
 });
 
 /**
@@ -108,40 +104,43 @@ function onSelection(selected){
     console.log(selected)
     switch(selected){
         case "Acousticness" :
+            // Set the global current category
             currCategory = "Acousticness";
+            // Update the axes and add line
             updateAxes(acousticness, "Acousticness");
             addLine(acousticness);
-            buildData(yearList,"null","acousticness")
+            // Update the scatter 
+            buildData(yearList,"scatter","acousticness");
             break;
         case "Danceability" :
             currCategory = "Danceability";
             updateAxes(danceability, "Danceability");
             addLine(danceability);
-            buildData(yearList,"null","danceability")
+            buildData(yearList,"scatter","danceability");
             break;
         case "Energy" :
             currCategory = "Energy";
             updateAxes(energy, "Energy");
             addLine(energy);
-            buildData(yearList,"null","energy")
+            buildData(yearList,"scatter","energy");
             break;
         case "Instrumentalness" :
             currCategory = "Instrumentalness";
             updateAxes(instrumentalness, "Instrumentalness");
             addLine(instrumentalness);
-            buildData(yearList,"null","instrumentalness")
+            buildData(yearList,"scatter","instrumentalness");
             break;
         case "Liveness" :
             currCategory = "Liveness";
             updateAxes(liveness, "Liveness");
             addLine(liveness);
-            buildData(yearList,"null","liveness")
+            buildData(yearList,"scatter","liveness");
             break;
         case "Speechiness" :
             currCategory = "Speechiness";
             updateAxes(speechiness, "Speechiness");
             addLine(speechiness);
-            buildData(yearList,"null","speechiness")
+            buildData(yearList,"scatter","speechiness");
             break;
     }
 }
@@ -149,23 +148,32 @@ function onSelection(selected){
 /**
  * Function to populate all of the arrays for ranged data: acousticness, danceability, energy, instrumentalness, liveness and speechiness.
  * @param {*} years The range of years selected using brushing, default 1921-2020
- * @param {*} bool boolean value determining if the axes need setup or not 
+ * @param {*} update string value determining how to update the graphs
  */
-function buildData(years,bool,category){
+function buildData(years,update,category){
 
+    // ----- EMPTY INTERIM ARRAYS, MAPS AND VARIABLES -----
     acousticness = [];
     danceability = [];
     energy = [];
     instrumentalness = [];
     liveness = [];
     speechiness = [];
-    keyMap.clear();
-    MajMinMap.clear();
     KeyPie = [];
     ModePie = [];
     scatter = [];
     PopList = [];
 
+    keyMap.clear();
+    MajMinMap.clear();
+   
+    first = {id:"",pop:0};
+    second = {id:"",pop:0};
+    third = {id:"",pop:0};
+    fourth = {id:"",pop:0};
+
+
+    // for each element in the data map, check if the year is in the selcted range and then build the datasets
     dataMap.forEach(function(value,key){
         let date = new Date(`${key}-01-01`)
         if(years.includes(date.getFullYear())){
@@ -182,11 +190,8 @@ function buildData(years,bool,category){
         }
     });
 
-    first = {id:"",pop:0};
-    second = {id:"",pop:0};
-    third = {id:"",pop:0};
-    fourth = {id:"",pop:0};
-
+    
+    // for eachn element in the song map, check if the year is in the selected range and then populate popularity variables
     SongMap.forEach(function(value,key){
         let date = new Date(`${value.year}-01-01`)
         if(years.includes(date.getFullYear())){
@@ -194,9 +199,11 @@ function buildData(years,bool,category){
         }
     })
 
+    // once variables are populated, add them to the list
+
     PopList.push(SongMap.get(first.id),SongMap.get(second.id),SongMap.get(third.id),SongMap.get(fourth.id))
 
-    console.log(PopList);
+    // Push from map to array and then order
 
     keyMap.forEach(function(value,key){
         KeyPie.push({x:key,y:value});
@@ -210,12 +217,14 @@ function buildData(years,bool,category){
         return a.x - b.x;
     })
 
+    // remove unnecessary key 
     for(let i = 0; i<KeyPie.length; i++){
         let val = KeyPie[i].y
         KeyPie[i] = val;
     }
 
-    if(bool == false){
+    // if init, initialise the pie charts and draw the axes, if scatter update the scatter plot, if update, update the remaining plots
+    if(update == "init"){
         drawMode(ModePie);
         drawKey(KeyPie,years);
 
@@ -228,21 +237,24 @@ function buildData(years,bool,category){
 
         updateList(PopList,years);
 
-    } else if(bool == "null"){
+    } else if(update == "scatter"){
         updateScatterChart(scatter, currCategory);
-    } 
-    else{
-        console.log(ModePie);
+
+    } else if(update == "update"){
+
         updateKey(KeyPie,years);
         updateMode(ModePie);
+
         updateList(PopList,years);
+
         onSelection(currCategory);
+
     }
     
 }
 
 /**
- * Populates the Acousticness array with pairs {year, average acousticness}
+ * Populates the Acousticness array with pairs {year, average acousticness
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -265,7 +277,7 @@ function buildAcousticData(data,year){
 }
 
 /**
- * Populates the Danceability array with pairs {year, average danceability}
+ * Populates the Danceability array with pairs {year, average danceability
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -288,7 +300,7 @@ function buildDanceData(data,year){
 }
 
 /**
- * Populates the Energy array with pairs {year, average energy}
+ * Populates the Energy array with pairs {year, average energy
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -311,7 +323,7 @@ function buildEnergyData(data,year){
 }
 
 /**
- * Populates the Instrumentalness array with pairs {year, average instrumentalness}
+ * Populates the Instrumentalness array with pairs {year, average instrumentalness
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -334,7 +346,7 @@ function buildInstrumentalData(data,year){
 }
 
 /**
- * Populates the Liveness array with pairs {year, average liveness}
+ * Populates the Liveness array with pairs {year, average liveness
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -357,7 +369,7 @@ function buildLivenessData(data,year){
 }
 
 /**
- * Populates the Speechiness array with pairs {year, average speechiness}
+ * Populates the Speechiness array with pairs {year, average speechiness
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -403,6 +415,11 @@ function buildKeyData(data){
     }
 }
 
+/**
+ * Build Data for scatter plot [{float,float,string},...]
+ * @param {*} data array of songs from a specific year
+ * @param {*} field string describing the comparator field (what variable the scatter plot will compare with tempo)
+ */
 function buildScatterData(data,field){
     for(let i=0; i<data.length; i++){
         if(parseFloat(data[i][field]) > 0.05 && parseFloat(data[i][field]) < 0.95 ){
@@ -412,6 +429,11 @@ function buildScatterData(data,field){
     }
 }
 
+/**
+ * Set the first->fourth most popular songs in a given year range
+ * @param {*} data Individual song enrty
+ * @param {*} id The ID of the given song
+ */
 function buildPopularityData(data, id){
 
     if(data.popularity>first.pop){

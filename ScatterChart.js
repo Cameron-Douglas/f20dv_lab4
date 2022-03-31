@@ -11,6 +11,8 @@ let xScat = d3.scaleLinear();
 //Y Axis
 let yScat = d3.scaleLinear();
 
+// https://stackoverflow.com/a/56239268
+// Add a responsive SVG
 const scatSvg = d3.select("body")
     .append("div")
     .attr("class","scatter-container")
@@ -20,14 +22,18 @@ const scatSvg = d3.select("body")
     .append("g")
     .attr("transform","translate(" + margin + "," + 75 + ")");
 
-// Setup the axes, the axes do not need to be updated for this plot so this is run once on init 
+/**
+ * Setup the axes, the axes do not need to be updated for this plot so this is run once on init 
+ * @param {*} data array of data [{tempo,field,song_name},...]
+ */
 function setupScatterAxes(data){
 
     /* Get the 'limits' of the data - the full extent (mins and max)
     so the plotted data fits perfectly */
 
-    xExtentScat = d3.extent( data, d=>{ return d.x } );
-    yExtentScat = d3.extent( data, d=>{ return d.y } );
+    xExtentScat = d3.extent( data, datum=>{ return datum.x } );
+    yExtentScat = d3.extent( data, datum=>{ return datum.y } );
+
     console.log(xExtentScat[0], xExtentScat[1])
     //X Axis
     xScat.domain([ xExtentScat[0], xExtentScat[1] ])
@@ -37,7 +43,7 @@ function setupScatterAxes(data){
     yScat.domain([ 0, yExtentScat[1] ])
         .range([ yMax, 0]);
 
-    //bottom
+    //Bottom axis
     scatSvg.append("g")
         .attr("transform", "translate(0," + yMax + ")")
         .attr("class","ScatterXaxis")
@@ -55,15 +61,17 @@ function setupScatterAxes(data){
 
 }
 
-// Update the points on the chart
+/**
+ * Update the points on the chart
+ * @param {*} data array of data [{tempo,field,song_name},...]
+ * @param {*} category The field being selected
+ */
 function updateScatterChart(data, category){
-
-
 
     var myColor = d3.scaleLinear().domain([0,212])
         .range(["dodgerblue","#1db954"]);
     
-    // Remove old labels and scatter points
+    // ----- Remove old labels and scatter points -----
     let arr = [];
     
     scatSvg.selectAll(".chartLabel")
@@ -76,7 +84,7 @@ function updateScatterChart(data, category){
         .exit()
         .remove();
 
-    // Append chart title and axis labels
+    // ----- Append chart title and axis labels -----
 
     scatSvg.append("text")
         .attr("x", xMax/2 - 50)
@@ -97,6 +105,7 @@ function updateScatterChart(data, category){
         .text(category + " against Tempo")
         .attr("text-anchor","middle")
 
+    // Append the tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
         .style("opacity", 0);
@@ -107,14 +116,15 @@ function updateScatterChart(data, category){
         .enter()
         .append("circle")
         .attr("class","scatterPoint")
-        .attr("cx", function (d) { return xScat(d.x) } ) // Set x and y values using the data
-        .attr("cy", function (d) { return yScat(d.y) } )
+        .attr("cx", function (datum) { return xScat(datum.x) } ) // Set x and y values using the data
+        .attr("cy", function (datum) { return yScat(datum.y) } )
         .attr("r", 5)
-        .attr("fill", function(d) { return myColor(d.y) } ) // Set the color using the color scale passed in
+        .attr("fill", function(datum) { return myColor(datum.y) } ) // Set the color using the color scale passed in
         .attr("stroke","#212121")
         .attr("opacity","0.3")
-        .on("mouseover",function(event,d,i){
+        .on("mouseover",function(event,datum){
 
+            // enlarge and decrease opacity
             d3.select(this)
                 .transition()
                 .duration(500)
@@ -122,20 +132,25 @@ function updateScatterChart(data, category){
                 .attr("opacity", "1")
                 .attr("r",10);
             
+            //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
+
+            // Make the tooltip div appear and set its scale
             div.transition()		
                 .duration(200)		
                 .style("opacity", 0.7)
                 .style("height","fit-content")
                 .style("width","fit-content");	
             
-            div	.html("<b>" + d.z + "</b>" + "<br/>"  + category + ": "+ d.x.toFixed(2) + "<br/>" + "Tempo: " + d.y.toFixed(2))	
+            // Set the content for the tooltip
+            div.html("<b>" + datum.z + "</b>" + "<br/>"  + category + ": "+ datum.x.toFixed(2) + "<br/>" + "Tempo: " + datum.y.toFixed(2))	
                 .style("left", (event.pageX + 25) + "px")		
                 .style("top", (event.pageY - 28) + "px");
            
     
         })
-        .on("mouseout",function(event,d,i){
+        .on("mouseout",function(){
             
+            // Re-size the markers
             d3.select(this)
                 .transition()
                 .duration(500)
@@ -143,6 +158,7 @@ function updateScatterChart(data, category){
                 .attr("r",5)
                 .attr("opacity","0.3");
 
+            //Hide the tooltip
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);

@@ -1,22 +1,26 @@
+// Declare arrays to get readable values from the indexes given in the data
 const keys = ["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
 const modes = ["Major","Minor"]
 
+// Set Pie radius
 const radius = ySize/2;
 
 // Initialise pie variable
 let pie = d3.pie()
 .sort(null);
 
-// Initialise arc varible
+// Initialise arc varibles
 let keyArc = d3.arc()
     .innerRadius(radius - 100)
     .outerRadius(radius - 50);
+
 let modeArc = d3.arc()
     .innerRadius(radius - 150)
     .outerRadius(radius - 100);
 
 
-
+// https://stackoverflow.com/a/56239268
+// Add a responsive SVG
 const pieSvg = d3.select("body")
     .append("div")
     .attr("class","pie-container")
@@ -26,7 +30,8 @@ const pieSvg = d3.select("body")
     .append("g")
     .attr("transform","translate(" + xSize/2 + "," + radius + ")");
 
-var myColor = d3.scaleLinear().domain([0,11])
+// Define color scales
+var segmentColors = d3.scaleLinear().domain([0,11])
     .range(["#494949","#1db954"]);
 var fontColor = d3.scaleLinear().domain([0,1])
     .range(["#b3b3b3","#212121"]);
@@ -37,6 +42,7 @@ var fontColor = d3.scaleLinear().domain([0,1])
  */
 function drawKey(dataset, yearList){ 
 
+    // Add hidden tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
         .style("opacity", 0)
@@ -47,25 +53,27 @@ function drawKey(dataset, yearList){
         .data(pie(dataset))
         .enter().append("path")
         .attr("class","keyPath")
-        .attr("fill", function(d,i){return myColor(i)})
+        .attr("fill", function(datum,index){return segmentColors(index)})
         .attr("d", keyArc)
         .attr("stroke","#b3b3b3")
         .attr("stroke-width","1px")
         .on("mouseover", function(event,data){
 
+            //enlarge segment on mouseover
             d3.select(this)
                 .transition()
                 .ease(d3.easeBounce)
                 .duration(1000)
-                .attr('d',function(d){return d3.arc().innerRadius(radius - 100)
-                    .outerRadius((radius - 50) + 10)(d)})
+                .attr('d',function(datum){return d3.arc().innerRadius(radius - 100)
+                    .outerRadius((radius - 50) + 10)(datum)})
                 .attr("stroke","#b3b3b3")
                 .attr("stroke-width","2px");
-
+            
+            // transition the div
             div.transition()		
                 .duration(200)		
                 .style("opacity", 0.9)
-                .style("background",function(){return myColor(data.index)})
+                .style("background",function(){return segmentColors(data.index)})
                 .style("color",function(){ 
                     let ind = 0;
                     if(data.index < 6){
@@ -79,41 +87,45 @@ function drawKey(dataset, yearList){
                 .style("left", (event.pageX + 15) + "px")		
                 .style("top", (event.pageY - 28) + "px");
 
-        }) .on("mouseout",function(event,data,index){
+        }) .on("mouseout",function(){
 
+            // hide the div
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);
 
+            // shrink the segment
             d3.select(this)
                 .transition()
                 .ease(d3.easeBounce)
                 .duration(500)
-                .attr('d',function(d){return d3.arc().innerRadius(radius - 100)
-                    .outerRadius(radius - 50)(d)})
+                .attr('d',function(datum){return d3.arc().innerRadius(radius - 100)
+                    .outerRadius(radius - 50)(datum)})
                     .attr("stroke","#b3b3b3")
                     .attr("stroke-width","1px");
         })
         .transition()  // Smoothly interpolate between the old angle and the new angle
         .duration(1000)
-        .attrTween("d", function (d) {
-            let i = d3.interpolate(d.endAngle, d.startAngle);
-            return function (t) {
-            d.startAngle = i(t);
-            return keyArc(d);
+        .attrTween("d", function (datum) {
+            let i = d3.interpolate(datum.endAngle, datum.startAngle);
+            return function (time) {
+            datum.startAngle = i(time);
+            return keyArc(datum);
             }
         });
-
+    
+    // Add the label to each arc
     pieSvg.selectAll('arcs')
         .data(pie(dataset))
         .enter()
         .append('text')
         .attr("class","pieLabel")
-        .text(function(d,i){return keys[i]})
-        .attr("transform", function(d) {return "translate(" + keyArc.centroid(d) + ")";  })
+        .text(function(datum,index){return keys[index]})
+        .attr("transform", function(datum) {return "translate(" + keyArc.centroid(datum) + ")";  })
         .style("text-anchor", "middle")
         .style("font-size", 17)
-      
+    
+    // Add the title to the pie chart 
     pieSvg.append("text")
         .attr("x",0)
         .attr("y",-150)
@@ -128,7 +140,8 @@ function drawKey(dataset, yearList){
  * @param {*} dataset containing number of songs in a major key and minor key: [major,minor]
  */
 function drawMode(dataset){ 
-   
+    
+    //Append tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
         .style("opacity", 0)
@@ -139,11 +152,11 @@ function drawMode(dataset){
         .data(pie(dataset))
         .enter().append("path")
         .attr("class","modePath")
-        .attr("fill", function(d,i){
-            if(i == 0){
-                return myColor(11)
+        .attr("fill", function(datum,index){
+            if(index == 0){
+                return segmentColors(11)
             } else{
-                return myColor(0)
+                return segmentColors(0)
             }
             })
         .attr("d", modeArc)
@@ -151,23 +164,25 @@ function drawMode(dataset){
         .attr("stroke-width","1px")
         .on("mouseover", function(event,data){
 
+            // enlarge the arc on mouseover 
             d3.select(this)
                 .transition()
                 .ease(d3.easeBounce)
                 .duration(1000)
-                .attr('d',function(d){return d3.arc().innerRadius((radius - 150))
-                    .outerRadius((radius - 100)-10)(d)})
+                .attr('d',function(datum){return d3.arc().innerRadius((radius - 150))
+                    .outerRadius((radius - 100)-10)(datum)})
                 .attr("stroke","#b3b3b3")
                 .attr("stroke-width","2px");
-
+            
+            // make the tooltip visible
             div.transition()		
                 .duration(200)		
                 .style("opacity", 0.9)
                 .style("background",function(){
                     if(data.index == 0){
-                    return myColor(11)
+                    return segmentColors(11)
                     } else{
-                        return myColor(0)
+                        return segmentColors(0)
                     }})
                 .style("color",function(){
                     let color; 
@@ -182,38 +197,39 @@ function drawMode(dataset){
                 .style("left", (event.pageX + 15) + "px")		
                 .style("top", (event.pageY - 28) + "px");
 
-        }) .on("mouseout",function(event,data,index){
-
+        }) .on("mouseout",function(){
+            // hide the tooltip
             div.transition()		
                 .duration(500)		
                 .style("opacity", 0);
-
+            //shrink the pie
             d3.select(this)
                 .transition()
                 .ease(d3.easeBounce)
                 .duration(500)
-                .attr('d',function(d){return d3.arc().innerRadius(radius - 150)
-                    .outerRadius(radius - 100)(d)})
+                .attr('d',function(datum){return d3.arc().innerRadius(radius - 150)
+                    .outerRadius(radius - 100)(datum)})
                     .attr("stroke","#b3b3b3")
                     .attr("stroke-width","1px");
         })
         .transition()  // Smoothly interpolate between the old angle and the new angle
         .duration(1000)
-        .attrTween("d", function (d) {
-            let i = d3.interpolate(d.endAngle, d.startAngle);
-            return function (t) {
-            d.startAngle = i(t);
-            return modeArc(d);
+        .attrTween("d", function (datum) {
+            let i = d3.interpolate(datum.endAngle, datum.startAngle);
+            return function (time) {
+            datum.startAngle = i(time);
+            return modeArc(datum);
             }
         });
 
+    // add label
     pieSvg.selectAll('arcs')
         .data(pie(dataset))
         .enter()
         .append('text')
         .attr("class","pieLabel")
-        .text(function(d,i){return modes[i]})
-        .attr("transform", function(d) {return "translate(" + modeArc.centroid(d) + ")";  })
+        .text(function(datum,index){return modes[index]})
+        .attr("transform", function(datum) {return "translate(" + modeArc.centroid(datum) + ")";  })
         .style("text-anchor", "middle")
         .style("font-size", 17);
     
@@ -225,21 +241,24 @@ function drawMode(dataset){
  * @param {*} yearList list of selected years
  */
 function updateKey(dataset, yearList){
+    
+    // Tween the path to change the pie chart
     let path = pieSvg.selectAll(".keyPath")
         .data(pie(dataset))
         .transition()
         .duration(1000)
-        .attrTween("d", function(d){
+        .attrTween("d", function(datum){
 
             //https://bl.ocks.org/jonsadka/fa05f8d53d4e8b5f262e
 
-            var i = d3.interpolate(this._current, d);
-            this._current = i(0);
-            return function(t) {
-                return keyArc(i(t));
+            var interpolar = d3.interpolate(this._current, datum);
+            this._current = interpolar(0);
+            return function(time) {
+                return keyArc(interpolar(time));
             };
         });
-
+    
+    // ----- remove old titles and labels and append new ones -----
     let arr = [];
     d3.selectAll(".pieTitle")
         .data(arr)
@@ -263,8 +282,8 @@ function updateKey(dataset, yearList){
         .enter()
         .append('text')
         .attr("class","pieLabel")
-        .text(function(d,i){return keys[i]})
-        .attr("transform", function(d) {return "translate(" + keyArc.centroid(d) + ")";  })
+        .text(function(datum,index){return keys[index]})
+        .attr("transform", function(datum) {return "translate(" + keyArc.centroid(datum) + ")";  })
         .style("text-anchor", "middle")
         .style("font-size", 17);
     
@@ -276,28 +295,31 @@ function updateKey(dataset, yearList){
  * @param {*} yearList list of selected years
  */
 function updateMode(dataset){
+
+    // Tween the path to change the pie chart
     let path = pieSvg.selectAll(".modePath")
         .data(pie(dataset))
         .transition()
         .duration(1000)
-        .attrTween("d", function(d){
+        .attrTween("d", function(datum){
 
             //https://bl.ocks.org/jonsadka/fa05f8d53d4e8b5f262e
 
-            var i = d3.interpolate(this._current, d);
-            this._current = i(0);
-            return function(t) {
-                return modeArc(i(t));
+            var interpolar = d3.interpolate(this._current, datum);
+            this._current = interpolar(0);
+            return function(time) {
+                return modeArc(interpolar(time));
             };
         });
     
+    // ----- remove old titles and labels and append new ones -----
     pieSvg.selectAll('arcs')
         .data(pie(dataset))
         .enter()
         .append('text')
         .attr("class","pieLabel")
-        .text(function(d,i){return modes[i]})
-        .attr("transform", function(d) {return "translate(" + modeArc.centroid(d) + ")";  })
+        .text(function(datum,index){return modes[index]})
+        .attr("transform", function(datum) {return "translate(" + modeArc.centroid(datum) + ")";  })
         .style("text-anchor", "middle")
         .style("font-size", 17);
 }
