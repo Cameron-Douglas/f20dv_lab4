@@ -1,5 +1,5 @@
 // ----- DECLARING GLOBAL DIMENSIONS -----
-const xSize = 800; const ySize = 350;
+const xSize = 900; const ySize = 350;
 const margin = 150;
 const xMax = xSize - margin*2;
 const yMax = ySize - margin;
