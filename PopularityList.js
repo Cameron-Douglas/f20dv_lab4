@@ -10,7 +10,10 @@ const listSvg = d3.select("body")
     .attr("transform","translate(" + margin + "," + 75 + ")");
 
 // API Access token
-const token = "BQCxtBiyuc2oczfSgfnZ1Xxkp4sCmMhkpvoASYVTBp25aihs5_5yravCJXs6Rhb1kue73KvwGvjIbMVAbEGzAHhqJT14mE2Pl6E0jR6EOCAuH8gT9NlYtO0sHAkY8G6kX0E99fbjejKv0Kk";
+
+// ----- THIS TOKEN IS TEMPORARY AND WILL REQUIRE UPDATING FROM THE SPOTIFY CONSOLE -----
+// ----- SPOTIFY CONSOLE: https://developer.spotify.com/console/get-track/?id -----
+const token = "BQBtycdhusFjEQHeX-2x7MgPMxCO2Q_OhLRJXwyOsniB1xYOY5GLsR8kikG0meWAKX3k8Sp9I_8dLQYl56R1nVaZnw7mUmmlAEfesxACDtqudgVBqbeBow5JbhZ0eDZoehfJByMcP5Fgklk";
 
 /**
  * Updates the current list of most popular songs
@@ -65,7 +68,7 @@ function updateList(data,yearList){
             .on("click",function(){
                 getLink(data[i])
             });
-}
+    }
    
 }
 
@@ -118,10 +121,12 @@ function getAlbumCover(data){
     // Define the endpoint
     let url = "https://api.spotify.com/v1/tracks/" + data.id;
 
+    // Using XHR https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest 
     // Open a new GET request
     let xhr = new XMLHttpRequest();
     xhr.open("GET", url);
 
+    // https://developer.spotify.com/documentation/web-api/reference/#/operations/get-track
     // Append requisite headers
     xhr.setRequestHeader("Accept", "application/json");
     xhr.setRequestHeader("Content-Type", "application/json");
@@ -188,10 +193,12 @@ function getLink(data){
      // Define the endpoint
      let url = "https://api.spotify.com/v1/tracks/" + data.id;
 
+     // Using XHR https://developer.mozilla.org/en-US/docs/Web/API/XMLHttpRequest/Using_XMLHttpRequest 
      // Open a new GET request
      let xhr = new XMLHttpRequest();
      xhr.open("GET", url);
- 
+    
+     // https://developer.spotify.com/documentation/web-api/reference/#/operations/get-track
      // Append requisite headers
      xhr.setRequestHeader("Accept", "application/json");
      xhr.setRequestHeader("Content-Type", "application/json");

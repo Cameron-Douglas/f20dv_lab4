@@ -71,11 +71,9 @@ d3.csv(loc,function(data){
             year = data[i].release_date.split("-")[0];
             yearSongs.push(data[i]);
         }
-        
-        
         SongMap.set(data[i].id,data[i]);
-    
     }
+
     // Value is unused but must remain as the first variable of a function in a for each is always the value
     dataMap.forEach(function(value,key){
         let date = new Date(`${key}-01-01`)
@@ -101,7 +99,6 @@ d3.csv(loc,function(data){
  * @param {*} selected category returned from the selection of the dropdown menu
  */
 function onSelection(selected){
-    console.log(selected)
     switch(selected){
         case "Acousticness" :
             // Set the global current category
@@ -254,7 +251,7 @@ function buildData(years,update,category){
 }
 
 /**
- * Populates the Acousticness array with pairs {year, average acousticness
+ * Populates the Acousticness array with pairs {year, average acousticness}
  * @param {*} array of songs from a specific year
  * @param {*} string given year for the data array
  */
@@ -394,7 +391,6 @@ function buildSpeechinessData(data,year){
 /**
  * Populates the keyMap with counts of each key signature 
  * @param {*} array of songs from a specific year
- * @param {*} string given year for the data array
  */
 function buildKeyData(data){
 
@@ -449,6 +445,4 @@ function buildPopularityData(data, id){
         fourth.id = id;
         fourth.pop = data.popularity; 
     } 
-
-
 }

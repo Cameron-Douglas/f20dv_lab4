@@ -195,6 +195,7 @@ function addLine(data){
         .attr("fill", "none")
         .attr("stroke-width", 2.25);
 
+    //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
     // append hidden tooltip div
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				

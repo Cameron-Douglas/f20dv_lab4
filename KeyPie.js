@@ -42,6 +42,7 @@ var fontColor = d3.scaleLinear().domain([0,1])
  */
 function drawKey(dataset, yearList){ 
 
+    //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
     // Add hidden tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
@@ -140,7 +141,7 @@ function drawKey(dataset, yearList){
  * @param {*} dataset containing number of songs in a major key and minor key: [major,minor]
  */
 function drawMode(dataset){ 
-    
+    //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
     //Append tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				

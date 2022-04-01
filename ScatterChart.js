@@ -104,6 +104,7 @@ function updateScatterChart(data, category){
         .text(category + " against Tempo")
         .attr("text-anchor","middle")
 
+    //https://bl.ocks.org/d3noob/a22c42db65eb00d4e369
     // Append the tooltip
     var div = d3.select("body").append("div")	
         .attr("class", "tooltip")				
