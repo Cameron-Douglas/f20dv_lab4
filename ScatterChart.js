@@ -34,7 +34,6 @@ function setupScatterAxes(data){
     xExtentScat = d3.extent( data, datum=>{ return datum.x } );
     yExtentScat = d3.extent( data, datum=>{ return datum.y } );
 
-    console.log(xExtentScat[0], xExtentScat[1])
     //X Axis
     xScat.domain([ xExtentScat[0], xExtentScat[1] ])
         .range([0, xMax]);

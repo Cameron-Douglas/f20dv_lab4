@@ -55,12 +55,15 @@ function updateList(data,yearList){
             .attr("class","listitem")
             .style("font-size",()=>(20-2*i)+"px")
             .text((i+1) + ". " + data[i].name)
-            .on("mouseover",function(event){
+            .on("mouseover",function(){
                 // on mouseover, update the preview
                 initPreview(data[i]);
 
-                d3.select(this).style("cursor", "default");
-            
+                d3.select(this).style("cursor", "pointer");
+
+            })
+            .on("click",function(){
+                getLink(data[i])
             });
 }
    
@@ -72,11 +75,14 @@ function updateList(data,yearList){
  */
 function initPreview(data){
 
+    // Get the album Cover
     getAlbumCover(data)
 
+    // Remove the old label
     d3.selectAll(".previewText")
         .remove();
 
+    // ----- Append new labels -----
     listSvg.append("text")
         .attr("class","previewText")
         .attr("x",xMax-50)
@@ -105,7 +111,7 @@ function initPreview(data){
 
 /**
  * Function to get the album cover for each song
- * @param {*} data 
+ * @param {*} data individual song
  */
 function getAlbumCover(data){
     
@@ -128,7 +134,6 @@ function getAlbumCover(data){
             // Parse JSON response
             let response = xhr.responseText;
             let jsonResponse = JSON.parse(response)
-            
             let image = jsonResponse["album"]["images"][1]["url"];
 
             // Remove old image
@@ -143,10 +148,69 @@ function getAlbumCover(data){
                 .attr("height", 150)
                 .attr("x", xMax - 125)
                 .attr("y", -25)
-                .attr("id","image")
+                .attr("id","image");
+
+            // ----- remove old artefacts -----
+            d3.selectAll("audio")
+                .remove();
+
+            d3.select("#audio-container")
+                .selectAll("p")
+                .remove();
+
+            // https://stackoverflow.com/a/46761870 
+            
+            // Add current title label
+            d3.select("#audio-container")
+                .append("p")
+                .text("Current track: " + data.name)
+                .style("color","#1db954")
+
+            // Add HTML audio element    
+            d3.select("#audio-container")
+                .append("audio")
+                .attr("controls","controls")
+                    .append("source")
+                    .attr("src",jsonResponse["preview_url"]) // Set the source to be the spotify preview found in the JSON response
+                    .attr("type","audio/mpeg")
 
         }
     };
     // Send Request
     xhr.send();
+}
+
+/**
+ * Function to open the song in spotify in a new tab
+ * @param {*} data individual song
+ */
+function getLink(data){
+     // Define the endpoint
+     let url = "https://api.spotify.com/v1/tracks/" + data.id;
+
+     // Open a new GET request
+     let xhr = new XMLHttpRequest();
+     xhr.open("GET", url);
+ 
+     // Append requisite headers
+     xhr.setRequestHeader("Accept", "application/json");
+     xhr.setRequestHeader("Content-Type", "application/json");
+     xhr.setRequestHeader("Authorization", `Bearer ${token}`);
+     
+    
+     // Check for statechange
+     xhr.onreadystatechange = () => {
+         if (xhr.readyState === 4) {
+             
+             // Parse JSON response
+             let response = xhr.responseText;
+             let jsonResponse = JSON.parse(response)
+             let link = jsonResponse["external_urls"]["spotify"];
+
+             // open spotify in a new window
+             window.open(link)
+         }
+     };
+     // Send Request
+     xhr.send();
 }

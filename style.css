@@ -1,10 +1,20 @@
 #topBanner{
+    width: 99%; 
+}
+
+#title-container{
+    width:49%;
+    height: 65px;
+    float:left;
     background-color: #212121;
     border-radius: 4px;
     border-color: #212121;
-    padding: 0.5%;
-    width: 99%;
     box-shadow: 2px 2px;
+}
+
+#audio-container{
+    width:49%;
+    float:right;
 }
 
 
@@ -15,7 +25,8 @@ body{
 
 h1{
     color: #1db954;
-    text-shadow: 1px 1px 1px #b3b3b3;
+    text-decoration: underline;
+    font-size: 24px;
 }
 
 
@@ -60,6 +71,17 @@ h1{
     width: 49%;
 }
 
+
+audio{
+    margin-left: 50px;
+    float:right;
+}
+p{
+    display: inline;
+    font-size: 20px;
+}
+
+
 .selection{
     text-align: center;
     background-color: #212121 ;
@@ -69,6 +91,7 @@ h1{
     border-radius: 4px;
     border: none;
     box-shadow: 2px 2px black;
+    margin-top:5px;
 }
 
 .resetButton{
@@ -81,6 +104,7 @@ h1{
     border: none;
     box-shadow: 2px 2px black;
     margin-left: 25px;
+    margin-top:5px;
     cursor:pointer;
 }
 
@@ -107,8 +131,9 @@ h1{
     font-size:12px;
 }
 
-.listDiv{
-    height:fit-content;
-    width: fit-content;
-    border-radius: 4px;
+.listitem{
+    fill: #1faa50;
+    text-decoration: underline;
 }
+
+
